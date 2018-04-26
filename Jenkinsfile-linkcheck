@@ -1,0 +1,32 @@
+pipeline {
+    agent {
+        dockerfile {
+            label 'docker'
+            filename 'Dockerfile-linkcheck'
+        }
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage ('Check links') {
+            steps {
+                sh """
+                tmp_venv="\$(mktemp -d)"
+                virtualenv "\$tmp_venv"
+                source "\$tmp_venv"/bin/activate
+                make linkcheck
+                """
+            }
+        }
+    }
+    post {
+        failure {
+            archiveArtifacts '_build/linkcheck/en/output.txt'
+        }
+    }
+}
